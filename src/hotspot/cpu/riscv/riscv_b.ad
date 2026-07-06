@@ -657,3 +657,86 @@ instruct convI2Bool_andI_reg_immIpowerOf2(iRegINoSp dst, iRegIorL2I src, immIpow
 
   ins_pipe(ialu_reg_reg);
 %}
+
+// --------------- Zbs Single-Bit Operations ---------------
+
+// Set Bit (bseti): rd = rs1 | (1 << shamt)
+// Matches OrI(src, 1<<n) where 1<<n is a power-of-2 constant.
+instruct bsetiI_reg_imm_b(iRegINoSp dst, iRegI src1, immIpowerOf2 mask) %{
+  predicate(UseZbs);
+  match(Set dst (OrI src1 mask));
+
+  format %{ "bseti  $dst, $src1, $mask\t#@bsetiI_reg_imm_b" %}
+  ins_cost(ALU_COST);
+  ins_encode %{
+    __ bseti(as_Register($dst$$reg), as_Register($src1$$reg), exact_log2((juint)($mask$$constant)));
+  %}
+  ins_pipe(ialu_reg_imm);
+%}
+
+// Set Bit Long (bseti): rd = rs1 | (1 << shamt)
+instruct bsetiL_reg_imm_b(iRegLNoSp dst, iRegL src1, immLpowerOf2 mask) %{
+  predicate(UseZbs);
+  match(Set dst (OrL src1 mask));
+
+  format %{ "bseti  $dst, $src1, $mask\t#@bsetiL_reg_imm_b" %}
+  ins_cost(ALU_COST);
+  ins_encode %{
+    __ bseti(as_Register($dst$$reg), as_Register($src1$$reg), exact_log2((julong)($mask$$constant)));
+  %}
+  ins_pipe(ialu_reg_imm);
+%}
+
+// Clear Bit (bclri): rd = rs1 & ~(1 << shamt)
+// Matches AndI(src, ~(1<<n)) where ~(1<<n) has exactly one zero bit.
+instruct bclriI_reg_imm_b(iRegINoSp dst, iRegI src1, immI_not_powerOf2 mask) %{
+  predicate(UseZbs);
+  match(Set dst (AndI src1 mask));
+
+  format %{ "bclri  $dst, $src1, $mask\t#@bclriI_reg_imm_b" %}
+  ins_cost(ALU_COST);
+  ins_encode %{
+    __ bclri(as_Register($dst$$reg), as_Register($src1$$reg), exact_log2((juint)(~($mask$$constant))));
+  %}
+  ins_pipe(ialu_reg_imm);
+%}
+
+// Clear Bit Long (bclri): rd = rs1 & ~(1 << shamt)
+instruct bclriL_reg_imm_b(iRegLNoSp dst, iRegL src1, immL_not_powerOf2 mask) %{
+  predicate(UseZbs);
+  match(Set dst (AndL src1 mask));
+
+  format %{ "bclri  $dst, $src1, $mask\t#@bclriL_reg_imm_b" %}
+  ins_cost(ALU_COST);
+  ins_encode %{
+    __ bclri(as_Register($dst$$reg), as_Register($src1$$reg), exact_log2((julong)(~($mask$$constant))));
+  %}
+  ins_pipe(ialu_reg_imm);
+%}
+
+// Invert Bit (binvi): rd = rs1 ^ (1 << shamt)
+// Matches XorI(src, 1<<n) where 1<<n is a power-of-2 constant.
+instruct binviI_reg_imm_b(iRegINoSp dst, iRegI src1, immIpowerOf2 mask) %{
+  predicate(UseZbs);
+  match(Set dst (XorI src1 mask));
+
+  format %{ "binvi  $dst, $src1, $mask\t#@binviI_reg_imm_b" %}
+  ins_cost(ALU_COST);
+  ins_encode %{
+    __ binvi(as_Register($dst$$reg), as_Register($src1$$reg), exact_log2((juint)($mask$$constant)));
+  %}
+  ins_pipe(ialu_reg_imm);
+%}
+
+// Invert Bit Long (binvi): rd = rs1 ^ (1 << shamt)
+instruct binviL_reg_imm_b(iRegLNoSp dst, iRegL src1, immLpowerOf2 mask) %{
+  predicate(UseZbs);
+  match(Set dst (XorL src1 mask));
+
+  format %{ "binvi  $dst, $src1, $mask\t#@binviL_reg_imm_b" %}
+  ins_cost(ALU_COST);
+  ins_encode %{
+    __ binvi(as_Register($dst$$reg), as_Register($src1$$reg), exact_log2((julong)($mask$$constant)));
+  %}
+  ins_pipe(ialu_reg_imm);
+%}
